@@ -1,236 +1,213 @@
-# ============================================================
-#  MONSTER WRANGLER — Build Day 1
-#  Principles of Computing | Unit 3 — OOP + Game Projects
-#  March 5, 2025
-# ============================================================
-#
-#  TODAY'S GOAL: Build the Game class and Player class.
-#  By the end of class your game window should open, the
-#  player should move with arrow keys, and the HUD should
-#  display on screen.
-#
-#  BUILD PLAN:
-#    Day 1 (Today) → Game class + Player class
-#    Day 2          → Monster class + collision logic
-#    Day 3          → HUD details + pause/reset + polish
-#
-#  HOW TO TEST: Run your file after each TODO block.
-#  Watch the window — does it behave as described?
-#
-#  SUBMISSION: 20 points — push to GitHub, link on Canvas.
-# ============================================================
-
 import pygame, random
 
-# ---- Initialize pygame ----
+# Initialize pygame
 pygame.init()
 
-# ---- Display Window ----
-WINDOW_WIDTH  = 1200
+# Set display window
+WINDOW_WIDTH = 1200
 WINDOW_HEIGHT = 700
 display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption("Monster Wrangler")
 
-# ---- FPS and Clock ----
-FPS   = 60
+# Set FPS and Clock
+FPS = 60
 clock = pygame.time.Clock()
 
 
-# ==============================================================
-#  TODO 1 — Game.__init__   (10 min)
-# ==============================================================
-#  Complete the __init__ method inside the Game class.
-#  All game attribute lines that say  # <-- TODO  need a value.
-#
-#  When done and run:
-#    • No errors on startup
-#    • Window opens (black screen is fine for now)
-# ==============================================================
-
+# Define Classes
 class Game():
     """A class to control gameplay"""
 
     def __init__(self, player, monster_group):
-        """Initialize the game object"""
+        """Initilize the game object"""
+        # Set game values
+        self.score = 0
+        self.round_number = 0
 
-        # -- Game tracking values --
-        self.score        = 0          # <-- already given
-        self.round_number = 0          # <-- already given
-        self.round_time   = 0          # <-- already given
-        self.frame_count  = 0          # <-- already given
+        self.round_time = 0
+        self.frame_count = 0
 
-        # -- References to other objects --
-        self.player        = player          # <-- TODO  store the player parameter
-        self.monster_group = monster_group   # <-- TODO  store the monster_group parameter
+        self.player = player
+        self.monster_group = monster_group
 
-        # -- Sound --
-        # TODO: load "next_level.wav" into self.next_level_sound
-        # self.next_level_sound = pygame.mixer.Sound( ??? )
-        self.next_level_sound = pygame.mixer.Sound(next_level.wav)  # replace this line
+        # Set sounds and music
+        self.next_level_sound = pygame.mixer.Sound("next_level.wav")
 
-        # -- Font --
-        # TODO: load "Abrushow.ttf" at size 24 into self.font
-        # self.font = pygame.font.Font( ???, ??? )
-        self.font = pygame.font.Font("Abrushow.ttf", self.font(24))  # replace this line
+        # Set font
+        self.font = pygame.font.Font("Abrushow.ttf", 24)
 
-        # -- Monster target images --
-        # TODO: load all four monster images:
-        #   blue_monster.png, green_monster.png,
-        #   purple_monster.png, yellow_monster.png
-        # Store them in a LIST called self.target_monster_images
-        # Order matters! index 0=blue, 1=green, 2=purple, 3=yellow
-        blue_image   = pygame.image.load(blue_monster.png)  # TODO: pygame.image.load(???)
-        green_image  = pygame.image.load(green_monster.png)  # TODO
-        purple_image = pygame.image.load(purple_monster.png.png)  # TODO
-        yellow_image = pygame.image.load(yellow_monster.png)  # TODO
+        # Set images
+        blue_image = pygame.image.load("blue_monster.png")
+        green_image = pygame.image.load("green_monster.png")
+        purple_image = pygame.image.load("purple_monster.png")
+        yellow_image = pygame.image.load("yellow_monster.png")
+        # This list cooresponds to the monster_type attribute int 0 -> blue, 1 -> green, 2 -> purple, 3 -> yellow
         self.target_monster_images = [blue_image, green_image, purple_image, yellow_image]
 
-        # -- Choose a random starting target type --
-        # TODO: pick a random int between 0 and 3 for self.target_monster_type
-        self.target_monster_type  = random.randint(0, 3)  # replace with random.randint(???, ???)
-
-        # TODO: use target_monster_type as an index into self.target_monster_images
+        self.target_monster_type = random.randint(0, 3)
         self.target_monster_image = self.target_monster_images[self.target_monster_type]
 
-        # -- Target monster display rect --
-        self.target_monster_rect          = self.target_monster_image.get_rect() if self.target_monster_image else pygame.Rect(0,0,64,64)
-        self.target_monster_rect.centerx  = WINDOW_WIDTH // 2
-        self.target_monster_rect.top      = 30
-
-
-    # ==============================================================
-    #  TODO 2 — Game.update   (5 min)
-    # ==============================================================
-    #  Frame counter counts up to FPS (60), then increments
-    #  round_time by 1 and resets. Add the call to check_collisions()
-    #  at the bottom.
-    #
-    #  When done:
-    #    • No crash — game loop runs smoothly
-    # ==============================================================
+        self.target_monster_rect = self.target_monster_image.get_rect()
+        self.target_monster_rect.centerx = WINDOW_WIDTH // 2
+        self.target_monster_rect.top = 30
 
     def update(self):
-        """Update the game object"""
+        """Update our game object"""
         self.frame_count += 1
         if self.frame_count == FPS:
-            self.round_time  += 1
-            self.frame_count  = 0
+            self.round_time += 1
+            self.frame_count = 0
 
-        # TODO: call self.check_collisions() here
+        # Check for collisions
         self.check_collisions()
 
-
-    # ==============================================================
-    #  TODO 3 — Game.draw   (15 min)
-    # ==============================================================
-    #  Render all HUD elements to display_surface.
-    #  Complete each blit() / draw.rect() call marked TODO.
-    #
-    #  When done:
-    #    • Score, Lives, Current Round appear top-left
-    #    • Round Time, Warps appear top-right
-    #    • "Current Catch" label + monster image appear centered at top
-    #    • Colored border box appears around the play area
-    # ==============================================================
-
     def draw(self):
-        """Draw the HUD to the display"""
+        """Draw the HUD and other to the display"""
+        # Set colors
+        WHITE = (255, 255, 255)
+        BLUE = (20, 176, 235)
+        GREEN = (87, 201, 47)
+        PURPLE = (226, 73, 243)
+        YELLOW = (243, 157, 20)
 
-        # -- Colors --
-        WHITE  = (255, 255, 255)
-        BLUE   = (20,  176, 235)
-        GREEN  = (87,  201,  47)
-        PURPLE = (226,  73, 243)
-        YELLOW = (243, 157,  20)
-
-        # List: index matches monster type
+        # Add the monster colors to a list where the index of the color matches target_monster_images
         colors = [BLUE, GREEN, PURPLE, YELLOW]
 
-        # -- Build text surfaces --
-        catch_text  = self.font.render("Current Catch", True, WHITE)
-        catch_rect  = catch_text.get_rect()
+        # Set text
+        catch_text = self.font.render("Current Catch", True, WHITE)
+        catch_rect = catch_text.get_rect()
         catch_rect.centerx = WINDOW_WIDTH // 2
-        catch_rect.top      = 5
+        catch_rect.top = 5
 
-        score_text  = self.font.render("Score: " + str(self.score), True, WHITE)
-        score_rect  = score_text.get_rect()
+        score_text = self.font.render("Score: " + str(self.score), True, WHITE)
+        score_rect = score_text.get_rect()
         score_rect.topleft = (5, 5)
 
-        lives_text  = self.font.render("Lives: " + str(self.player.lives), True, WHITE)
-        lives_rect  = lives_text.get_rect()
+        lives_text = self.font.render("Lives: " + str(self.player.lives), True, WHITE)
+        lives_rect = lives_text.get_rect()
         lives_rect.topleft = (5, 35)
 
-        round_text  = self.font.render("Current Round: " + str(self.round_number), True, WHITE)
-        round_rect  = round_text.get_rect()
+        round_text = self.font.render("Current Round: " + str(self.round_number), True, WHITE)
+        round_rect = round_text.get_rect()
         round_rect.topleft = (5, 65)
 
-        time_text   = self.font.render("Round Time: " + str(self.round_time), True, WHITE)
-        time_rect   = time_text.get_rect()
-        time_rect.topright  = (WINDOW_WIDTH - 10, 5)
+        time_text = self.font.render("Round Time: " + str(self.round_time), True, WHITE)
+        time_rect = time_text.get_rect()
+        time_rect.topright = (WINDOW_WIDTH - 10, 5)
 
-        warp_text   = self.font.render("Warps: " + str(self.player.warps), True, WHITE)
-        warp_rect   = warp_text.get_rect()
-        warp_rect.topright  = (WINDOW_WIDTH - 10, 35)
+        warp_text = self.font.render("Warps: " + str(self.player.warps), True, WHITE)
+        warp_rect = warp_text.get_rect()
+        warp_rect.topright = (WINDOW_WIDTH - 10, 35)
 
-        # TODO: blit all six text surfaces to display_surface
-        # Pattern: display_surface.blit(text_surface, rect)
-        # display_surface.blit(catch_text, catch_rect)
-        # display_surface.blit(score_text, score_rect)
-        # ... (lives, round, time, warp)
+        # Blit the HUD
         display_surface.blit(catch_text, catch_rect)
         display_surface.blit(score_text, score_rect)
-        display_surface.blit(lives_text, lives_rect)
         display_surface.blit(round_text, round_rect)
+        display_surface.blit(lives_text, lives_rect)
         display_surface.blit(time_text, time_rect)
         display_surface.blit(warp_text, warp_rect)
-
-        # TODO: blit self.target_monster_image at self.target_monster_rect
         display_surface.blit(self.target_monster_image, self.target_monster_rect)
 
-        # TODO: draw a colored outline box around the target monster image
-        pygame.draw.rect(display_surface, colors[self.target_monster_type],
-        (WINDOW_WIDTH//2 - 32, 30, 64, 64), 2)
-
-        # TODO: draw the colored play area border
-        pygame.draw.rect(display_surface, colors[self.target_monster_type],
-        (0, 100, WINDOW_WIDTH, WINDOW_HEIGHT - 200), 4)
-
-
-    # ---- These methods are stubs — you'll build them on Days 2 & 3 ----
+        pygame.draw.rect(display_surface, colors[self.target_monster_type], (WINDOW_WIDTH // 2 - 32, 30, 64, 64), 2)
+        pygame.draw.rect(display_surface, colors[self.target_monster_type], (0, 100, WINDOW_WIDTH, WINDOW_HEIGHT - 200),
+                         4)
 
     def check_collisions(self):
-        """Check for collisions between player and monsters — Day 2"""
-        pass
+        """Check for collisions between play er and monsters"""
+        # Check for collision between a player and an indiviaual monster
+        # WE must test the type of the monster to see if it matches the type of our target monster
+        collided_monster = pygame.sprite.spritecollideany(self.player, self.monster_group)
+
+        # We collided with a monster
+        if collided_monster:
+            # Caught the correct monster
+            if collided_monster.type == self.target_monster_type:
+                self.score += 100 * self.round_number
+                self.player.catch_sound.play()
+                # Remove caught monster
+                collided_monster.remove(self.monster_group)
+                if (self.monster_group):
+                    # There are more monsters to catch
+                    self.choose_new_target()
+                else:
+                    # The round is complete
+                    self.start_new_round()
+            # Caught the wrong monster
+            else:
+                self.player.die_sound.play()
+                self.player.lives -= 1
+                # Check for game over
+                if self.player.lives <= 0:
+                    self.pause_game("Final Score: " + str(self.score), "Press 'Enter' to play again")
+                    self.reset_game()
+                else:
+                    self.player.reset()
 
     def start_new_round(self):
-        """Start a new round — Day 2"""
+        """Populate board with new monsters"""
+        # Provide a score bonus based on how quickly the round was finished
+        self.score += int(10000 * self.round_number / (1 + self.round_time))
+
+        # Reset round values
+        self.round_time = 0
+        self.frame_count = 0
         self.round_number += 1
-        self.round_time    = 0
-        self.frame_count   = 0
+        self.player.warps = 2
+
+        # Remove any remaining monsters from a game reset
+        self.monster_group.empty()
+
+        # Add monsters to the monster group
+        for i in range(self.round_number):
+            self.monster_group.add(
+                Monster(random.randint(0, WINDOW_WIDTH - 64), random.randint(100, WINDOW_HEIGHT - 164),
+                        self.target_monster_images[0], 0))
+            self.monster_group.add(
+                Monster(random.randint(0, WINDOW_WIDTH - 64), random.randint(100, WINDOW_HEIGHT - 164),
+                        self.target_monster_images[1], 1))
+            self.monster_group.add(
+                Monster(random.randint(0, WINDOW_WIDTH - 64), random.randint(100, WINDOW_HEIGHT - 164),
+                        self.target_monster_images[2], 2))
+            self.monster_group.add(
+                Monster(random.randint(0, WINDOW_WIDTH - 64), random.randint(100, WINDOW_HEIGHT - 164),
+                        self.target_monster_images[3], 3))
+
+        # Choose a new target monster
+        self.choose_new_target()
+
+        self.next_level_sound.play()
 
     def choose_new_target(self):
-        """Choose a new target monster — Day 2"""
-        pass
+        """Choose a new target monster for the player"""
+        target_monster = random.choice(self.monster_group.sprites())
+        self.target_monster_type = target_monster.type
+        self.target_monster_image = target_monster.image
 
     def pause_game(self, main_text, sub_text):
-        """Pause the game and show message — Day 3"""
+        """Pause the game"""
         global running
+
+        # Set color
         WHITE = (255, 255, 255)
         BLACK = (0, 0, 0)
 
-        if self.font:
-            main_surface = self.font.render(main_text, True, WHITE)
-            main_rect    = main_surface.get_rect(center=(WINDOW_WIDTH//2, WINDOW_HEIGHT//2))
-            sub_surface  = self.font.render(sub_text,  True, WHITE)
-            sub_rect     = sub_surface.get_rect(center=(WINDOW_WIDTH//2, WINDOW_HEIGHT//2 + 64))
-            display_surface.fill(BLACK)
-            display_surface.blit(main_surface, main_rect)
-            display_surface.blit(sub_surface,  sub_rect)
-        else:
-            display_surface.fill(BLACK)
+        # Create the main pause text
+        main_text = self.font.render(main_text, True, WHITE)
+        main_rect = main_text.get_rect()
+        main_rect.center = (WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2)
 
+        # Create the sub pause text
+        sub_text = self.font.render(sub_text, True, WHITE)
+        sub_rect = sub_text.get_rect()
+        sub_rect.center = (WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2 + 64)
+
+        # Display the pause text
+        display_surface.fill(BLACK)
+        display_surface.blit(main_text, main_rect)
+        display_surface.blit(sub_text, sub_rect)
         pygame.display.update()
 
+        # Pause the game
         is_paused = True
         while is_paused:
             for event in pygame.event.get():
@@ -239,23 +216,19 @@ class Game():
                         is_paused = False
                 if event.type == pygame.QUIT:
                     is_paused = False
-                    running   = False
+                    running = False
 
     def reset_game(self):
-        """Reset the game — Day 3"""
-        pass
+        """Reset the game"""
+        self.score = 0
+        self.round_number = 0
 
+        self.player.lives = 5
+        self.player.warps = 2
+        self.player.reset()
 
-# ==============================================================
-#  TODO 4 — Player.__init__   (10 min)
-# ==============================================================
-#  Build the Player sprite.
-#  Hint: Call super().__init__() first — it registers the sprite
-#  with pygame's sprite system and sets up .image and .rect.
-#
-#  When done:
-#    • Player image visible at bottom-center of window
-# ==============================================================
+        self.start_new_round()
+
 
 class Player(pygame.sprite.Sprite):
     """A player class that the user can control"""
@@ -263,56 +236,24 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
         """Initialize the player"""
         super().__init__()
-
-        # TODO: load knight.png into self.image
-        self.image = pygame.image.load(knight.png)
-        self.image = pygame.Surface((32, 64))    # placeholder — replace this line
-        self.image.fill((0, 200, 255))
-
-        # TODO: get the rect from self.image and position it:
-        #   centerx = WINDOW_WIDTH // 2
-        #   bottom  = WINDOW_HEIGHT
+        self.image = pygame.image.load("knight.png")
         self.rect = self.image.get_rect()
         self.rect.centerx = WINDOW_WIDTH // 2
-        self.rect.bottom  = WINDOW_HEIGHT
+        self.rect.bottom = WINDOW_HEIGHT
 
-        # TODO: set these attributes
-        self.lives    = 5
-        self.warps    = 2
+        self.lives = 5
+        self.warps = 2
         self.velocity = 8
 
-        # TODO: load three sounds
-        # self.catch_sound = pygame.mixer.Sound("catch.wav")
-        # self.die_sound   = pygame.mixer.Sound("die.wav")
-        # self.warp_sound  = pygame.mixer.Sound("warp.wav")
-        self.catch_sound = pygame.mixer.Sound("catch.wav")   # replace each None with actual Sound load
-        self.die_sound   = pygame.mixer.Sound("die.wav")
-        self.warp_sound  = pygame.mixer.Sound("warp.wav")
-
-
-    # ==============================================================
-    #  TODO 5 — Player.update   (10 min)
-    # ==============================================================
-    #  Move player with arrow keys, but DON'T let them leave
-    #  the play area:
-    #    LEFT  boundary → x > 0
-    #    RIGHT boundary → x < WINDOW_WIDTH
-    #    UP    boundary → y > 100        (top HUD boundary)
-    #    DOWN  boundary → y < WINDOW_HEIGHT - 100  (bottom safe zone)
-    #
-    #  When done:
-    #    • Player moves smoothly with arrow keys
-    #    • Can't go outside the colored border box
-    # ==============================================================
+        self.catch_sound = pygame.mixer.Sound("catch.wav")
+        self.die_sound = pygame.mixer.Sound("die.wav")
+        self.warp_sound = pygame.mixer.Sound("warp.wav")
 
     def update(self):
-        """Update the player — handle keyboard movement"""
+        """Update the player"""
         keys = pygame.key.get_pressed()
 
-        # TODO: add movement for all four directions with boundary checks
-        # Pattern:
-        #   if keys[pygame.K_LEFT] and self.rect.left > 0:
-        #       self.rect.x -= self.velocity
+        # Move the player within the bounds of the screen
         if keys[pygame.K_LEFT] and self.rect.left > 0:
             self.rect.x -= self.velocity
         if keys[pygame.K_RIGHT] and self.rect.right < WINDOW_WIDTH:
@@ -321,112 +262,92 @@ class Player(pygame.sprite.Sprite):
             self.rect.y -= self.velocity
         if keys[pygame.K_DOWN] and self.rect.bottom < WINDOW_HEIGHT - 100:
             self.rect.y += self.velocity
-        
-
-
-    # ==============================================================
-    #  TODO 6 — Player.warp + Player.reset   (5 min)
-    # ==============================================================
-    #  warp()  → if warps > 0, decrement warps,
-    #             play warp_sound, move bottom to WINDOW_HEIGHT
-    #  reset() → move centerx to WINDOW_WIDTH//2, bottom to WINDOW_HEIGHT
-    #
-    #  When done:
-    #    • Pressing SPACE warps player to bottom
-    #    • Warp counter on HUD decreases
-    # ==============================================================
 
     def warp(self):
-        """Warp the player to the safe zone at the bottom"""
+        """Warp the player to the bottom 'safe zone'"""
         if self.warps > 0:
             self.warps -= 1
-            if self.warp_sound:
-                self.warp_sound.play()
-            # TODO: reposition player rect.bottom to WINDOW_HEIGHT
-            else:
-                self.rect.bottom = WINDOW_HEIGHT
+            self.warp_sound.play()
+            self.rect.bottom = WINDOW_HEIGHT
 
     def reset(self):
-        """Reset the player position to bottom-center"""
-        # TODO: set rect.centerx and rect.bottom
+        """Resets the players position"""
         self.rect.centerx = WINDOW_WIDTH // 2
         self.rect.bottom = WINDOW_HEIGHT
 
 
-# ==============================================================
-#  MONSTER — Stub for Days 2 (do not edit today)
-# ==============================================================
-
 class Monster(pygame.sprite.Sprite):
-    """A class to create enemy monster objects — built on Day 2"""
+    """A class to create enemy monster objects"""
+
     def __init__(self, x, y, image, monster_type):
+        """Initialize the monster"""
         super().__init__()
-        self.image      = image if image else pygame.Surface((64,64))
-        self.rect       = self.image.get_rect()
+        self.image = image
+        self.rect = self.image.get_rect()
         self.rect.topleft = (x, y)
-        self.type       = monster_type
-        self.dx         = random.choice([-1, 1])
-        self.dy         = random.choice([-1, 1])
-        self.velocity   = random.randint(1, 5)
+
+        # Monster type is an int 0 -> blue, 1 -> green, 2 -> purple, 3 -> yellow
+        self.type = monster_type
+
+        # Set random motion
+        self.dx = random.choice([-1, 1])
+        self.dy = random.choice([-1, 1])
+        self.velocity = random.randint(1, 5)
 
     def update(self):
+        """Update the monster"""
         self.rect.x += self.dx * self.velocity
         self.rect.y += self.dy * self.velocity
+
+        # Bounce the monster off the edges of the display
         if self.rect.left <= 0 or self.rect.right >= WINDOW_WIDTH:
-            self.dx = -self.dx
+            self.dx = -1 * self.dx
         if self.rect.top <= 100 or self.rect.bottom >= WINDOW_HEIGHT - 100:
-            self.dy = -self.dy
+            self.dy = -1 * self.dy
 
 
-# ==============================================================
-#  TODO 7 — Wire it together   (5 min)
-# ==============================================================
-#  Create the groups, objects, and start the game.
-#  The main loop is provided — just run it and test.
-#
-#  When done:
-#    • Window opens with "Monster Wrangler" title screen
-#    • Press Enter → play area appears with HUD
-#    • Player moves with arrows, warps with SPACE
-# ==============================================================
-
-# -- Create sprite groups --
-my_player_group  = pygame.sprite.Group()
-my_player        = Player()
+# Create a player group and Player object
+my_player_group = pygame.sprite.Group()
+my_player = Player()
 my_player_group.add(my_player)
 
+# Create a monster group.
 my_monster_group = pygame.sprite.Group()
 
-# -- Create Game object --
+# Create a game object
 my_game = Game(my_player, my_monster_group)
-
-# -- Show title screen and start round 1 --
 my_game.pause_game("Monster Wrangler", "Press 'Enter' to begin")
 my_game.start_new_round()
 
-
-# ---- Main Game Loop (given — do not edit) ----
+# The main game loop
 running = True
 while running:
+    # Check to see if user wants to quit
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        # Player wants to warp
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 my_player.warp()
 
+    # Fill the display
     display_surface.fill((0, 0, 0))
 
+    # Update and draw sprite groups
     my_player_group.update()
     my_player_group.draw(display_surface)
 
     my_monster_group.update()
     my_monster_group.draw(display_surface)
 
+    # Update and draw the Game
     my_game.update()
     my_game.draw()
 
+    # Update display and tick clock
     pygame.display.update()
     clock.tick(FPS)
 
+# End the game
 pygame.quit()
