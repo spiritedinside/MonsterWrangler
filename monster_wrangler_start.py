@@ -22,6 +22,7 @@ class Game():
         """Initilize the game object"""
         # Set game values
         self.score = 0
+        self.high_score = 0
         self.round_number = 0
 
         self.round_time = 0
@@ -41,10 +42,11 @@ class Game():
         green_image = pygame.image.load("green_monster.png")
         purple_image = pygame.image.load("purple_monster.png")
         yellow_image = pygame.image.load("yellow_monster.png")
+        evil_image = pygame.image.load("evil_monster.png")
         # This list cooresponds to the monster_type attribute int 0 -> blue, 1 -> green, 2 -> purple, 3 -> yellow
-        self.target_monster_images = [blue_image, green_image, purple_image, yellow_image]
+        self.target_monster_images = [blue_image, green_image, purple_image, yellow_image, evil_image]
 
-        self.target_monster_type = random.randint(0, 3)
+        self.target_monster_type = random.randint(0, 4)
         self.target_monster_image = self.target_monster_images[self.target_monster_type]
 
         self.target_monster_rect = self.target_monster_image.get_rect()
@@ -69,9 +71,10 @@ class Game():
         GREEN = (87, 201, 47)
         PURPLE = (226, 73, 243)
         YELLOW = (243, 157, 20)
+        RED = (220, 50, 50)
 
         # Add the monster colors to a list where the index of the color matches target_monster_images
-        colors = [BLUE, GREEN, PURPLE, YELLOW]
+        colors = [BLUE, GREEN, PURPLE, YELLOW, RED]
 
         # Set text
         catch_text = self.font.render("Current Catch", True, WHITE)
@@ -99,6 +102,10 @@ class Game():
         warp_rect = warp_text.get_rect()
         warp_rect.topright = (WINDOW_WIDTH - 10, 35)
 
+        hi_text = self.font.render("Best: " + str(self.high_score), True, YELLOW)
+        hi_rect = hi_text.get_rect()
+        hi_rect.topright = (WINDOW_WIDTH - 10, 65)
+
         # Blit the HUD
         display_surface.blit(catch_text, catch_rect)
         display_surface.blit(score_text, score_rect)
@@ -107,6 +114,8 @@ class Game():
         display_surface.blit(time_text, time_rect)
         display_surface.blit(warp_text, warp_rect)
         display_surface.blit(self.target_monster_image, self.target_monster_rect)
+        display_surface.blit(hi_text, hi_rect)
+
 
         pygame.draw.rect(display_surface, colors[self.target_monster_type], (WINDOW_WIDTH // 2 - 32, 30, 64, 64), 2)
         pygame.draw.rect(display_surface, colors[self.target_monster_type], (0, 100, WINDOW_WIDTH, WINDOW_HEIGHT - 200),
@@ -171,6 +180,9 @@ class Game():
             self.monster_group.add(
                 Monster(random.randint(0, WINDOW_WIDTH - 64), random.randint(100, WINDOW_HEIGHT - 164),
                         self.target_monster_images[3], 3))
+            self.monster_group.add(
+                Monster(random.randint(0, WINDOW_WIDTH - 64), random.randint(100, WINDOW_HEIGHT - 164),
+                        self.target_monster_images[4], 4))
 
         # Choose a new target monster
         self.choose_new_target()
@@ -220,6 +232,9 @@ class Game():
 
     def reset_game(self):
         """Reset the game"""
+        if self.score > self.high_score:
+            self.high_score = self.score
+
         self.score = 0
         self.round_number = 0
 
